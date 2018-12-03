@@ -190,7 +190,7 @@ macro(jss_config_java)
     )
     find_jar(
         JAXB_JAR
-        NAMES jaxb-api
+        NAMES jaxb-api jaxme/ws-jaxmeapi
     )
     find_jar(
         SLF4J_JDK14_JAR
