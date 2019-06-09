@@ -6,18 +6,17 @@ Summary:        Java Security Services (JSS)
 URL:            http://www.dogtagpki.org/wiki/JSS
 License:        MPLv1.1 or GPLv2+ or LGPLv2+
 
-Version:        4.5.1
+Version:        4.6.0
 Release:        1%{?_timestamp}%{?_commit_id}%{?dist}
-# global         _phase -a1
+%global         _phase -b1
 
 # To generate the source tarball:
 # $ git clone https://github.com/dogtagpki/jss.git
 # $ cd jss
-# $ git archive \
-#     --format=tar.gz \
-#     --prefix jss-VERSION/ \
-#     -o jss-VERSION.tar.gz \
-#     <version tag>
+# $ git tag v4.5.<z>
+# $ git push origin v4.5.<z>
+# Then go to https://github.com/dogtagpki/jss/releases and download the source
+# tarball.
 Source:         https://github.com/dogtagpki/%{name}/archive/v%{version}%{?_phase}/%{name}-%{version}%{?_phase}.tar.gz
 
 # To create a patch for all changes since a version tag:
@@ -38,8 +37,8 @@ BuildRequires:  cmake
 
 BuildRequires:  gcc-c++
 BuildRequires:  nspr-devel >= 4.13.1
-BuildRequires:  nss-devel >= 3.28.4-6
-BuildRequires:  nss-tools >= 3.28.4-6
+BuildRequires:  nss-devel >= 3.30
+BuildRequires:  nss-tools >= 3.30
 BuildRequires:  java-devel
 BuildRequires:  jpackage-utils
 BuildRequires:  slf4j
@@ -52,11 +51,9 @@ BuildRequires:  slf4j-jdk14
 BuildRequires:  apache-commons-lang
 BuildRequires:  apache-commons-codec
 
-%if 0%{?fedora} >= 25 || 0%{?rhel} > 7
-BuildRequires:  perl-interpreter
-%endif
+BuildRequires:  junit
 
-Requires:       nss >= 3.28.4-6
+Requires:       nss >= 3.30
 Requires:       java-headless
 Requires:       jpackage-utils
 Requires:       slf4j
@@ -116,7 +113,9 @@ rm -rf build && mkdir -p build && cd build
     -DJAVA_LIB_INSTALL_DIR=%{_jnidir} \
     ..
 
-%{__make} all test javadoc
+%{__make} all
+%{__make} javadoc || true
+ctest --output-on-failure
 
 ################################################################################
 %install

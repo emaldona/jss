@@ -212,17 +212,16 @@ jsock_write(PRFileDesc *fd, const PRIOVec *iov, PRInt32 iov_size,
             ASSERT_OUTOFMEM(env);
             goto finish;
         }
-        bytes = (*env)->GetByteArrayElements(env, outbufArray, NULL);
-        if( bytes == NULL ) {
+        if (!JSS_RefByteArray(env, outbufArray, &bytes, NULL)) {
             ASSERT_OUTOFMEM(env);
             goto finish;
         }
-        for( iovi = 0, outbufLen = 0; iovi < iov_size; ++iovi) {
+        for (iovi = 0, outbufLen = 0; iovi < iov_size; ++iovi) {
             memcpy(bytes+outbufLen,iov[iovi].iov_base, iov[iovi].iov_len);
             outbufLen += iov[iovi].iov_len;
         }
         PR_ASSERT(outbufLen == (*env)->GetArrayLength(env, outbufArray));
-        (*env)->ReleaseByteArrayElements(env, outbufArray, bytes, 0);
+        JSS_DerefByteArray(env, outbufArray, bytes, 0);
     }
 
     /*
@@ -355,8 +354,7 @@ getInetAddress(PRFileDesc *fd, PRNetAddr *addr, LocalOrPeer localOrPeer)
         PR_ASSERT( (addrBALen == 4) || (addrBALen == 16 ) );
 
         /* make sure you release them later */
-        addrBytes = (*env)->GetByteArrayElements(env, addrByteArray, NULL);
-        if( addrBytes == NULL ) {
+        if (!JSS_RefByteArray(env, addrByteArray, &addrBytes, NULL)) {
             ASSERT_OUTOFMEM(env);
             goto finish;
         }
@@ -373,8 +371,7 @@ getInetAddress(PRFileDesc *fd, PRNetAddr *addr, LocalOrPeer localOrPeer)
             addr->inet.port = port;
         }
 
-        (*env)->ReleaseByteArrayElements(env, addrByteArray, addrBytes,
-            JNI_ABORT);
+        JSS_DerefByteArray(env, addrByteArray, addrBytes, JNI_ABORT);
     }
 
     status = PR_SUCCESS;
@@ -430,24 +427,10 @@ jsock_send(PRFileDesc *fd, const void *buf, PRInt32 amount,
     /*
      * Turn buf into byte array
      */
-    {
-        jbyte *bytes;
-
-        byteArray = (*env)->NewByteArray(env, amount);
-        if( byteArray == NULL ) {
-            ASSERT_OUTOFMEM(env);
-            goto finish;
-        }
-
-        bytes = (*env)->GetByteArrayElements(env, byteArray, NULL);
-        if( bytes == NULL ) {
-            ASSERT_OUTOFMEM(env);
-            goto finish;
-        }
-
-        memcpy(bytes, buf, amount);
-
-        (*env)->ReleaseByteArrayElements(env, byteArray, bytes, 0);
+    byteArray = JSS_ToByteArray(env, buf, amount);
+    if (byteArray == NULL) {
+        ASSERT_OUTOFMEM(env);
+        goto finish;
     }
 
     retval = writebuf(env, fd, sockObj, byteArray);
@@ -567,7 +550,7 @@ jsock_recv(PRFileDesc *fd, void *buf, PRInt32 amount,
 
         memcpy(buf, bytes, retval);
 
-        (*env)->ReleaseByteArrayElements(env, byteArray, bytes, JNI_ABORT);
+        JSS_DerefByteArray(env, byteArray, bytes, JNI_ABORT);
     }
 
 finish:

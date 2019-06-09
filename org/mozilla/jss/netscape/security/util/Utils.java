@@ -25,6 +25,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
@@ -95,6 +96,62 @@ public class Utils {
         }
         return false;
     }
+
+    public static String readFromStream(InputStream inputStream) throws IOException {
+        StringBuilder sb = new StringBuilder();
+        BufferedReader br = null;
+        try {
+            br = new BufferedReader(new InputStreamReader(inputStream));
+            String line = null;
+            while ((line = br.readLine()) != null) {
+                sb.append(line + System.getProperty("line.separator"));
+            }
+        } finally {
+            br.close();
+        }
+        return sb.toString().trim();
+    }
+
+    public static void writeToStream(OutputStream outputStream, String input) throws IOException {
+        BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream));
+        writer.write(input);
+        writer.flush();
+        writer.close();
+    }
+
+    /**
+     * Utility method to execute system commands
+     *
+     * @param cmd The command to be executed and its arguments
+     * @param input The stdin input to be passed to the cmd
+     * @return stdout or stderr of the command executed
+     * @throws IOException
+     * @throws InterruptedException
+     */
+    public static String exec(String[] cmd, String input) throws IOException, InterruptedException {
+
+        ProcessBuilder pb = new ProcessBuilder(cmd);
+
+        Process p = pb.start();
+
+        if (input != null) {
+            writeToStream(p.getOutputStream(), input);
+        }
+
+        p.waitFor();
+
+        String output;
+        if (p.exitValue() == 0) {
+            output = readFromStream(p.getInputStream());
+        } else {
+            output = readFromStream(p.getErrorStream());
+        }
+        p.destroy();
+
+        return output;
+    }
+
+
 
     public static String SpecialURLDecode(String s) {
         if (s == null)
@@ -314,7 +371,6 @@ public class Utils {
      * Each line is at most 64-character long and terminated with CRLF.
      *
      * @param bytes byte array
-     * @param chunked TODO
      * @return base-64 encoded data
      */
     public static String base64encodeMultiLine(byte[] bytes) {
@@ -346,16 +402,31 @@ public class Utils {
     /**
      * Normalize B64 input String
      *
-     * @pram string base-64 string
+     * @param string base-64 string
      * @return normalized string
      */
     public static String normalizeString(String string) {
+        return normalizeString(string, false);
+    }
+
+    /**
+     * Normalize B64 input String
+     *
+     * @param string base-64 string
+     * @param keepspace a boolean variable to control whether to keep spaces or not
+     * @return normalized string
+     */
+    public static String normalizeString(String string, Boolean keepSpace) {
         if (string == null) {
             return string;
         }
 
         StringBuffer sb = new StringBuffer();
-        StringTokenizer st = new StringTokenizer(string, "\r\n ");
+        StringTokenizer st = null;
+        if (keepSpace)
+            st = new StringTokenizer(string, "\r\n");
+        else
+            st = new StringTokenizer(string, "\r\n ");
 
         while (st.hasMoreTokens()) {
             String nextLine = st.nextToken();
@@ -364,4 +435,5 @@ public class Utils {
         }
         return sb.toString();
     }
+
 }

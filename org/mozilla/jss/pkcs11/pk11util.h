@@ -179,7 +179,7 @@ JSS_PK11_getCertSlotPtr(JNIEnv *env, jobject certObject, PK11SlotInfo **ptr);
  * key slot (which contains the permanent database token) is returned.
  */
 CERTCertificate *
-JSS_PK11_findCertAndSlotFromNickname(char *nickname, void *wincx,
+JSS_PK11_findCertAndSlotFromNickname(const char *nickname, void *wincx,
     PK11SlotInfo **ppSlot);
 
 
@@ -509,6 +509,14 @@ JSS_PK11_closeSession(PK11SlotInfo *slot, CK_SESSION_HANDLE session,
  */
 char*
 JSS_PK11_getErrorString(CK_RV crv);
+
+/***********************************************************************
+ *
+ * getSupportedWrappingMechanism
+ *
+ * Returns a 
+ */
+CK_MECHANISM_TYPE getSupportedWrappingMechanism(JNIEnv *env, jobject algObj, PK11SlotInfo *slot);
 
 
 PR_END_EXTERN_C
