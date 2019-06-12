@@ -11,8 +11,6 @@ import org.mozilla.jss.ssl.*;
 import org.mozilla.jss.util.*;
 
 public class TestBufferPRFD {
-    public static int PR_WOULD_BLOCK_ERROR = -5998;
-
     public static void TestCreateClose() {
         byte[] info = {0x01, 0x02, 0x03, 0x04};
         BufferProxy left_read = Buffer.Create(10);
@@ -39,20 +37,16 @@ public class TestBufferPRFD {
             assert(result[i] == info[i % info.length]);
         }
 
-        assert(PR.Close(left) == 0);
-        assert(PR.Close(right) == 0);
+        assert(PR.Close(left) == PR.SUCCESS);
+        assert(PR.Close(right) == PR.SUCCESS);
 
         Buffer.Free(left_read);
         Buffer.Free(right_read);
     }
 
     public synchronized static PRFDProxy Setup_NSS_Client(PRFDProxy fd, String host) {
-        PRFDProxy model = SSL.ImportFD(null, PR.NewTCPSocket());
-        assert(model != null);
-
-        fd = SSL.ImportFD(model, fd);
+        fd = SSL.ImportFD(null, fd);
         assert(fd != null);
-        PR.Close(model);
 
         assert(SSL.ResetHandshake(fd, false) == 0);
         assert(SSL.SetURL(fd, host) == 0);
@@ -63,12 +57,8 @@ public class TestBufferPRFD {
     public synchronized static PRFDProxy Setup_NSS_Server(PRFDProxy fd, String host,
         PK11Cert cert, PK11PrivKey key) throws Exception
     {
-        PRFDProxy model = SSL.ImportFD(null, PR.NewTCPSocket());
-        assert(model != null);
-
-        fd = SSL.ImportFD(model, fd);
+        fd = SSL.ImportFD(null, fd);
         assert(fd != null);
-        PR.Close(model);
 
         assert(SSL.ConfigSecureServer(fd, cert, key, 1) == 0);
         assert(SSL.ConfigServerSessionIDCache(1, 100, 100, null) == 0);
@@ -146,18 +136,18 @@ public class TestBufferPRFD {
 
         /* Try a handshake */
         while(!IsHandshakeFinished(c_nspr, s_nspr)) {
-            if (SSL.ForceHandshake(c_nspr) != 0) {
+            if (SSL.ForceHandshake(c_nspr) != SSL.SECSuccess) {
                 int error = PR.GetError();
 
-                if (error != PR_WOULD_BLOCK_ERROR) {
+                if (error != PRErrors.WOULD_BLOCK_ERROR) {
                     System.out.println("Unexpected error: " + error);
                     System.exit(1);
                 }
             }
-            if (SSL.ForceHandshake(s_nspr) != 0) {
+            if (SSL.ForceHandshake(s_nspr) != SSL.SECSuccess) {
                 int error = PR.GetError();
 
-                if (error != PR_WOULD_BLOCK_ERROR) {
+                if (error != PRErrors.WOULD_BLOCK_ERROR) {
                     System.out.println("Unexpected error: " + error);
                     System.exit(1);
                 }
@@ -205,12 +195,12 @@ public class TestBufferPRFD {
         }
 
         /* Close connections */
-        assert(PR.Shutdown(c_nspr, PR.SHUTDOWN_BOTH) == 0);
-        assert(PR.Shutdown(s_nspr, PR.SHUTDOWN_BOTH) == 0);
+        assert(PR.Shutdown(c_nspr, PR.SHUTDOWN_BOTH) == PR.SUCCESS);
+        assert(PR.Shutdown(s_nspr, PR.SHUTDOWN_BOTH) == PR.SUCCESS);
 
         /* Clean up */
-        assert(PR.Close(c_nspr) == 0);
-        assert(PR.Close(s_nspr) == 0);
+        assert(PR.Close(c_nspr) == PR.SUCCESS);
+        assert(PR.Close(s_nspr) == PR.SUCCESS);
 
         Buffer.Free(read_buf);
         Buffer.Free(write_buf);
