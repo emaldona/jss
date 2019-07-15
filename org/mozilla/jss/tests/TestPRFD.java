@@ -1,6 +1,7 @@
 package org.mozilla.jss.tests;
 
 import org.mozilla.jss.nss.PR;
+import org.mozilla.jss.nss.PRErrors;
 import org.mozilla.jss.nss.PRFDProxy;
 
 public class TestPRFD {
@@ -75,6 +76,8 @@ public class TestPRFD {
         System.out.println("PR.SHUTDOWN_RCV: " + PR.SHUTDOWN_RCV);
         System.out.println("PR.SHUTDOWN_SEND: " + PR.SHUTDOWN_SEND);
         System.out.println("PR.SHUTDOWN_BOTH: " + PR.SHUTDOWN_BOTH);
+
+        assert(PR.ErrorToName(PRErrors.WOULD_BLOCK_ERROR).equals("PR_WOULD_BLOCK_ERROR"));
     }
 
     public static void main(String[] args) {

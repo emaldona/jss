@@ -268,7 +268,7 @@ Java_org_mozilla_jss_nss_PR_GetError(JNIEnv *env, jclass clazz)
 }
 
 JNIEXPORT jbyteArray JNICALL
-Java_org_mozilla_jss_nss_PR_GetErrorText(JNIEnv *env, jclass clazz)
+Java_org_mozilla_jss_nss_PR_GetErrorTextNative(JNIEnv *env, jclass clazz)
 {
     ssize_t error_size;
     char *error_text = NULL;
@@ -289,6 +289,25 @@ Java_org_mozilla_jss_nss_PR_GetErrorText(JNIEnv *env, jclass clazz)
 
     result = JSS_ToByteArray(env, error_text, error_size);
     free(error_text);
+    return result;
+}
+
+JNIEXPORT jbyteArray JNICALL
+Java_org_mozilla_jss_nss_PR_ErrorToNameNative(JNIEnv *env, jclass clazz, jint error_code)
+{
+    size_t error_size;
+    const char *error_name = NULL;
+    jbyteArray result = NULL;
+
+    PR_ASSERT(env != NULL);
+
+    error_name = PR_ErrorToName(error_code);
+    if (error_name == NULL) {
+        return NULL;
+    }
+
+    error_size = strlen(error_name);
+    result = JSS_ToByteArray(env, error_name, error_size);
     return result;
 }
 
