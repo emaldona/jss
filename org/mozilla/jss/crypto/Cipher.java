@@ -22,6 +22,11 @@ import org.mozilla.jss.util.Assert;
  * call to <code>doFinal</code>.
  */
 public abstract class Cipher {
+    // Note: Cipher can't extend javax.crypto.Cipher because it is part of the
+    // provider mechanism. In particular, it isn't an abstract class, many of
+    // the methods are marked final, and it expects to instantiate a CipherSpi
+    // class instead of be directly created like things which override our
+    // Cipher class expect (e.g., PK11Cipher). This is why JSSCipherSpi exists.
 
     /**
      * Initializes a encryption context with a symmetric key.
@@ -121,7 +126,7 @@ public abstract class Cipher {
      */
     public static byte[]
     pad(byte[] toBePadded, int blockSize) {
-        Assert._assert(blockSize > 0);
+        assert(blockSize > 0);
 
         // the padOctet is also the number of pad octets
         byte padOctet = (byte) (blockSize - (toBePadded.length % blockSize));
