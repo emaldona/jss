@@ -8,16 +8,18 @@ import org.mozilla.jss.crypto.CryptoToken;
 import org.mozilla.jss.crypto.SymmetricKey;
 import org.mozilla.jss.util.Assert;
 
+// We've updated jss.crypto.SymmetricKey to extend javax.crypto.SecretKey, so
+// PK11SymKey implements that interface as well.
 public final class PK11SymKey implements SymmetricKey {
 
     protected PK11SymKey(byte[] pointer) {
-        Assert._assert(pointer!=null);
+        assert(pointer!=null);
         keyProxy  = new SymKeyProxy(pointer);
         nickName = null;
     }
 
     protected PK11SymKey(byte[] pointer,String nickName) {
-        Assert._assert(pointer!=null);
+        assert(pointer!=null);
         keyProxy  = new SymKeyProxy(pointer);
         this.nickName = nickName;
      }
