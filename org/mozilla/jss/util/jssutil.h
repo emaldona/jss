@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include <stdbool.h>
 
+#include <certt.h>
 #include <nspr.h>
 #include <jni.h>
 #include <secitem.h>
@@ -353,6 +354,53 @@ const char *JSS_RefJString(JNIEnv *env, jstring str);
 **
 */
 void JSS_DerefJString(JNIEnv *env, jstring str, const char *ref);
+
+/************************************************************************
+** JSS_PK11_WrapCertToChain
+**
+** Inquires about the certificate chain for cert, and returns the full or
+** partial as a jobjectArray for use in JNI'd code.
+**
+*/
+jobjectArray JSS_PK11_WrapCertToChain(JNIEnv *env, CERTCertificate *cert,
+                                      SECCertUsage certUsage);
+
+/************************************************************************
+** JSS_ExceptionToSECStatus
+**
+** When the JNI has thrown a known exception, convert this to a SECStatus
+** code and set the appropriate PRErrorCode.
+**
+** The supported exceptions are:
+**  - CertificateException
+**
+*/
+SECStatus JSS_ExceptionToSECStatus(JNIEnv *env);
+
+/************************************************************************
+** JSS_SECStatusToException
+**
+** Convert a failing SECStatus and PRErrorCode combination into a raised
+** JNI exception.
+**
+** The supported exceptions are:
+**  - CertificateException
+**
+*/
+void JSS_SECStatusToException(JNIEnv *env, SECStatus result, PRErrorCode code);
+
+/************************************************************************
+** JSS_SECStatusToException
+**
+** Convert a failing SECStatus and PRErrorCode combination into a raised
+** JNI exception with the specified message.
+**
+** The supported exceptions are:
+**  - CertificateException
+**
+*/
+void JSS_SECStatusToExceptionMessage(JNIEnv *env, SECStatus result,
+                                     PRErrorCode code, const char *message);
 
 PR_END_EXTERN_C
 
