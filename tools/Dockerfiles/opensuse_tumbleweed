@@ -1,4 +1,4 @@
-FROM opensuse:tumbleweed
+FROM opensuse/tumbleweed
 
 # Install generic dependencies to build jss
 RUN true \
@@ -10,7 +10,7 @@ RUN true \
                           apache-commons-codec apache-commons-lang gcc-c++ \
                           java-11-openjdk-devel javapackages-tools slf4j mozilla-nss \
                           zlib-devel mozilla-nss-devel mozilla-nspr-devel perl \
-                          zip unzip \
+                          zip unzip junit4 \
         && mkdir -p /home/sandbox \
         && zypper clean --all \
         && rm -rf /usr/share/doc /usr/share/doc-base \
