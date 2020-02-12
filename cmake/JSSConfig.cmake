@@ -307,10 +307,8 @@ macro(jss_config_java)
     message(STATUS "JSS JAVAC FLAGS: ${JSS_JAVAC_FLAGS}")
     message(STATUS "JSS TEST JAVAC FLAGS: ${JSS_TEST_JAVAC_FLAGS}")
 
-    # Variables for javadoc building. Note that JSS_PACKAGES needs to be
-    # updated whenever a new package is created.
+    # Variables for javadoc building.
     set(JSS_WINDOW_TITLE "JSS: Java Security Services")
-    set(JSS_PACKAGES "org.mozilla.jss;org.mozilla.jss.asn1;org.mozilla.jss.crypto;org.mozilla.jss.pkcs7;org.mozilla.jss.pkcs10;org.mozilla.jss.pkcs11;org.mozilla.jss.pkcs11.attrs;org.mozilla.jss.pkcs12;org.mozilla.jss.pkix.primitive;org.mozilla.jss.pkix.cert;org.mozilla.jss.pkix.cmc;org.mozilla.jss.pkix.cmmf;org.mozilla.jss.pkix.cms;org.mozilla.jss.pkix.crmf;org.mozilla.jss.provider.java.security;org.mozilla.jss.provider.javax.crypto;org.mozilla.jss.SecretDecoderRing;org.mozilla.jss.ssl;org.mozilla.jss.util;org.mozilla.jss.netscape.security.util;org.mozilla.jss.netscape.security.extensions;org.mozilla.jss.netscape.security.acl;org.mozilla.jss.netscape.security.pkcs;org.mozilla.jss.netscape.security.x509;org.mozilla.jss.netscape.security.provider;org.mozilla.jss.nss;org.mozilla.jss.ssl.javax")
 
     set(JSS_BASE_PORT 2876)
     math(EXPR JSS_TEST_PORT_CLIENTAUTH ${JSS_BASE_PORT}+0)
@@ -341,5 +339,10 @@ macro(jss_config_symbols)
     check_symbol_exists("CKM_AES_CMAC" "nspr.h;nss.h;pkcs11t.h" HAVE_NSS_CMAC)
     if(NOT HAVE_NSS_CMAC)
         message(WARNING "Your NSS version doesn't support CMAC; some features of JSS won't work.")
+    endif()
+
+    check_symbol_exists("CKM_SP800_108_COUNTER_KDF" "nspr.h;nss.h;pkcs11t.h" HAVE_NSS_KBKDF)
+    if(NOT HAVE_NSS_KBKDF)
+        message(WARNING "Your NSS version doesn't support NIST SP800-108 KBKDF; some features of JSS won't work.")
     endif()
 endmacro()
