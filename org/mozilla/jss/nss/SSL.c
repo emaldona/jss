@@ -193,6 +193,34 @@ Java_org_mozilla_jss_nss_SSL_CipherPrefGet(JNIEnv *env, jclass clazz,
 }
 
 JNIEXPORT int JNICALL
+Java_org_mozilla_jss_nss_SSL_CipherPrefSetDefault(JNIEnv *env, jclass clazz,
+    jint cipher, jboolean enabled)
+{
+    PR_ASSERT(env != NULL);
+    PR_SetError(0, 0);
+
+    return SSL_CipherPrefSetDefault(cipher, enabled);
+}
+
+JNIEXPORT jboolean JNICALL
+Java_org_mozilla_jss_nss_SSL_CipherPrefGetDefault(JNIEnv *env, jclass clazz,
+    jint cipher)
+{
+    int enabled = false;
+
+    PR_ASSERT(env != NULL);
+    PR_SetError(0, 0);
+
+    if (SSL_CipherPrefGetDefault(cipher, &enabled) != SECSuccess) {
+        JSS_throwMsg(env, ILLEGAL_ARGUMENT_EXCEPTION,
+            "Unknown cipher suite to get or getting its value failed");
+        return enabled;
+    }
+
+    return enabled;
+}
+
+JNIEXPORT int JNICALL
 Java_org_mozilla_jss_nss_SSL_VersionRangeSetNative(JNIEnv *env, jclass clazz,
     jobject fd, jint min_ssl, jint max_ssl)
 {
@@ -244,6 +272,66 @@ Java_org_mozilla_jss_nss_SSL_VersionRangeGet(JNIEnv *env, jclass clazz,
     if (SSL_VersionRangeGet(real_fd, &vrange) != SECSuccess) {
         JSS_throwMsg(env, INVALID_PARAMETER_EXCEPTION,
             "Unable to dereference fd object");
+        return NULL;
+    }
+
+    return JSS_SSL_wrapVersionRange(env, vrange);
+}
+
+JNIEXPORT int JNICALL
+Java_org_mozilla_jss_nss_SSL_VersionRangeSetDefaultNative(JNIEnv *env, jclass clazz,
+    jint variant_ssl, jint min_ssl, jint max_ssl)
+{
+    SSLVersionRange vrange;
+    SSLProtocolVariant variant;
+
+    PR_ASSERT(env != NULL);
+    PR_SetError(0, 0);
+
+    if (min_ssl < 0 || min_ssl >= JSSL_enums_size ||
+            max_ssl < 0 || max_ssl >= JSSL_enums_size ||
+            variant_ssl < 0 || variant_ssl >= JSSL_enums_size)
+    {
+        char buf[200];
+        snprintf(buf, 200,
+                 "SSL.VersionRangeSetDefaultNative(): for min=%d max=%d "
+                 "variant=%d failed - out of range for array JSSL_enums "
+                 "size: %d", min_ssl, max_ssl, variant_ssl, JSSL_enums_size);
+        JSSL_throwSSLSocketException(env, buf);
+        return SECFailure;
+    }
+
+    vrange.min = JSSL_enums[min_ssl];
+    vrange.max = JSSL_enums[max_ssl];
+    variant = JSSL_enums[variant_ssl];
+
+    return SSL_VersionRangeSetDefault(variant, &vrange);
+}
+
+JNIEXPORT jobject JNICALL
+Java_org_mozilla_jss_nss_SSL_VersionRangeGetDefaultNative(JNIEnv *env,
+    jclass clazz, jint variant_ssl)
+{
+    SSLVersionRange vrange;
+    SSLProtocolVariant variant;
+
+    PR_SetError(0, 0);
+
+    if (variant_ssl < 0 || variant_ssl >= JSSL_enums_size) {
+        char buf[200];
+        snprintf(buf, 200,
+                 "SSL.VersionRangeGetDefaultNative(): for variant=%d failed: "
+                 "out of range for array JSSL_enums size: %d", variant_ssl,
+                 JSSL_enums_size);
+        JSSL_throwSSLSocketException(env, buf);
+        return NULL;
+    }
+
+    variant = JSSL_enums[variant_ssl];
+
+    if (SSL_VersionRangeGetDefault(variant, &vrange) != SECSuccess) {
+        JSS_throwMsg(env, INVALID_PARAMETER_EXCEPTION,
+            "Unable to inquire default SSL version for this protocol");
         return NULL;
     }
 
