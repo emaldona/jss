@@ -197,6 +197,20 @@ public class SSL {
     public static native SecurityStatusResult SecurityStatus(SSLFDProxy fd);
 
     /**
+     * Inquire for SSL Channel Information after the handshake has completed.
+     *
+     * See also: SSL_GetChannelInfo in /usr/include/nss3/ssl.h
+     */
+    public static native SSLChannelInfo GetChannelInfo(SSLFDProxy fd);
+
+    /**
+     * Inquire for SSL Channel Information before the handshake has completed.
+     *
+     * See also: SSL_GetPreliminaryChannelInfo in /usr/include/nss3/ssl.h
+     */
+    public static native SSLPreliminaryChannelInfo GetPreliminaryChannelInfo(SSLFDProxy fd);
+
+    /**
      * Reset the handshake status, optionally handshaking as a server.
      *
      * See also: SSL_ResetHandshake in /usr/include/nss3/ssl.h
@@ -236,6 +250,13 @@ public class SSL {
      */
     public static native int ConfigServerSessionIDCache(int maxCacheEntries,
         long timeout, long ssl3_timeout, String directory);
+
+    /**
+     * Invalidate the SSL session associated with this socket.
+     *
+     * See also: SSL_InvalidateSession in /usr/include/nss3/ssl.h
+     */
+    public static native int InvalidateSession(SSLFDProxy fd);
 
     /**
      * Introspect the peer's certificate.
