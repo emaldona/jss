@@ -118,8 +118,7 @@ public class TestRawSSL {
 
         SSLChannelInfo r = SSL.GetChannelInfo(ssl_fd);
         assert(r != null);
-        assert(r.protocolVersion == null);
-        assert(r.haveNSS334 == true);
+        assert(r.getProtocolVersion() == null);
 
         System.out.println(r.toString());
 
@@ -135,10 +134,9 @@ public class TestRawSSL {
 
         SSLPreliminaryChannelInfo r = SSL.GetPreliminaryChannelInfo(ssl_fd);
         assert(r != null);
-        assert(r.protocolVersion == null);
         assert(r.haveProtocolVersion() == false);
         assert(r.haveCipherSuite() == false);
-        assert(r.have0RTTCipherSuite() == false);
+        assert(r.haveZeroRttCipherSuite() == false);
         assert(r.havePeerAuth() == false);
 
         System.out.println(r.toString());
