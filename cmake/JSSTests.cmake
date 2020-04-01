@@ -32,6 +32,7 @@ macro(jss_tests)
         NAME "Setup_DBs"
         COMMAND "org.mozilla.jss.tests.SetupDBs" "${RESULTS_NSSDB_OUTPUT_DIR}" "${PASSWORD_FILE}"
         DEPENDS "Create_Setup_DBs"
+        MODE "NONE"
     )
 
     # Various FIPS related tests depend on FIPS being enabled; since this
@@ -49,6 +50,7 @@ macro(jss_tests)
         NAME "Setup_FIPS_DBs"
         COMMAND "org.mozilla.jss.tests.SetupDBs" "${RESULTS_NSSDB_FIPS_OUTPUT_DIR}" "${PASSWORD_FILE}"
         DEPENDS "Create_FIPS_Setup_DBs"
+        MODE "NONE"
     )
 
 
@@ -165,7 +167,7 @@ macro(jss_tests)
     )
     jss_test_java(
         NAME "List_CA_certs"
-        COMMAND "org.mozilla.jss.tests.ListCACerts" "${RESULTS_NSSDB_OUTPUT_DIR}"
+        COMMAND "org.mozilla.jss.tests.ListCACerts" "${RESULTS_NSSDB_OUTPUT_DIR}" "Verbose"
         DEPENDS "Generate_known_DSS_cert_pair"
     )
     jss_test_java(
@@ -324,13 +326,13 @@ macro(jss_tests)
             NAME "Enable_FipsMODE"
             COMMAND "org.mozilla.jss.tests.FipsTest" "${RESULTS_NSSDB_FIPS_OUTPUT_DIR}" "enable"
             DEPENDS "Generate_FIPS_known_ECDSA_cert_pair"
-            MODE "FIPS"
+            MODE "NONE"
         )
         jss_test_java(
             NAME "check_FipsMODE"
             COMMAND "org.mozilla.jss.tests.FipsTest" "${RESULTS_NSSDB_FIPS_OUTPUT_DIR}" "chkfips"
             DEPENDS "Enable_FipsMODE"
-            MODE "FIPS"
+            MODE "NONE"
         )
 
         # The current version of NSS features partial support for TLS 1.3 in
@@ -395,7 +397,7 @@ macro(jss_tests)
             NAME "Disable_FipsMODE"
             COMMAND "org.mozilla.jss.tests.FipsTest" "${RESULTS_NSSDB_FIPS_OUTPUT_DIR}" "disable"
             DEPENDS "check_FipsMODE" "SSLClientAuth_FIPSMODE" "HMAC_FIPSMODE" "KeyWrapping_FIPSMODE" "Mozilla_JSS_JCA_Signature_FIPSMODE" "JSS_Signature_test_FipsMODE" "SSLEngine_RSA_FIPSMODE" "SSLEngine_ECDSA_FIPSMODE"
-            MODE "FIPS"
+            MODE "NONE"
         )
     endif()
 
@@ -460,7 +462,7 @@ function(jss_test_java)
     list(APPEND EXEC_COMMAND "-Djava.library.path=${CMAKE_BINARY_DIR}")
     if(TEST_JAVA_MODE STREQUAL "FIPS")
         list(APPEND EXEC_COMMAND "-Djava.security.properties=${CONFIG_OUTPUT_DIR}/fips.security")
-    else()
+    elseif(NOT TEST_JAVA_MODE STREQUAL "NONE")
         list(APPEND EXEC_COMMAND "-Djava.security.properties=${CONFIG_OUTPUT_DIR}/java.security")
     endif()
     if(CMAKE_BUILD_TYPE STREQUAL "Debug")
