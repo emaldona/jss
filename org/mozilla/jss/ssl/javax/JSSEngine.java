@@ -398,7 +398,13 @@ public abstract class JSSEngine extends javax.net.ssl.SSLEngine {
      * Sets the list of enabled cipher suites from a a list of SSLCipher enum
      * instances.
      */
-    public void setEnabledCipherSuites(SSLCipher[] suites) {
+    public void setEnabledCipherSuites(SSLCipher[] suites) throws IllegalArgumentException {
+        if (ssl_fd != null) {
+            String msg = "Unable to process setEnabledCipherSuites(...) ";
+            msg += "after handshake has started!";
+            throw new IllegalArgumentException(msg);
+        }
+
         if (suites == null || suites.length == 0) {
             logger.warn("JSSEngine.setEnabledCipherSuites(...) given a null list of cipher suites.");
             return;
@@ -411,7 +417,7 @@ public abstract class JSSEngine extends javax.net.ssl.SSLEngine {
      * Queries the list of cipher suites enabled by default, if a
      * corresponding setEnabledCIpherSuites call hasn't yet been made.
      */
-    private SSLCipher[] queryEnabledCipherSuites() {
+    public static SSLCipher[] queryEnabledCipherSuites() {
         logger.debug("JSSEngine: queryEnabledCipherSuites()");
         ArrayList<SSLCipher> enabledCiphers = new ArrayList<SSLCipher>();
 
@@ -508,6 +514,13 @@ public abstract class JSSEngine extends javax.net.ssl.SSLEngine {
         if ((min_protocol == null && max_protocol != null) || (min_protocol != null && max_protocol == null)) {
             throw new IllegalArgumentException("Expected min and max to either both be null or both be not-null; not mixed: (" + min + ", " + max + ")");
         }
+
+        if (ssl_fd != null) {
+            String msg = "Unable to process setEnabledProtocols(...) after ";
+            msg += "handshake has started!";
+            throw new IllegalArgumentException(msg);
+        }
+
         min_protocol = min;
         max_protocol = max;
     }
@@ -532,7 +545,7 @@ public abstract class JSSEngine extends javax.net.ssl.SSLEngine {
      *
      * Only used when setEnabledProtocols(...) hasn't yet been called.
      */
-    private SSLVersionRange queryEnabledProtocols() {
+    public static SSLVersionRange queryEnabledProtocols() {
         logger.debug("JSSEngine: queryEnabledProtocols()");
 
         SSLVersionRange vrange;
@@ -719,6 +732,12 @@ public abstract class JSSEngine extends javax.net.ssl.SSLEngine {
      */
     public void setUseClientMode(boolean mode) throws IllegalArgumentException {
         logger.debug("JSSEngine.setUseClientMode(" + mode + ")");
+        if (ssl_fd != null) {
+            String msg = "Unable to process setUseClientMode(" + mode + ") ";
+            msg += "after handshake has started!";
+            throw new IllegalArgumentException(msg);
+        }
+
         as_server = !mode;
     }
 
