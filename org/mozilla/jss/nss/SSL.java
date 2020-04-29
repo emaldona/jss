@@ -53,6 +53,107 @@ public class SSL {
     public static final int SECWouldBlock = getSSLSECWouldBlock();
 
     /**
+     * Enable post-handshake authentication extension. Value for use with
+     * OptionGet.
+     *
+     * See also: SSL_ENABLE_POST_HANDSHAKE_AUTH in /usr/include/nss3/ssl.h
+     */
+    public static final int ENABLE_POST_HANDSHAKE_AUTH = getSSLEnablePostHandshakeAuth();
+
+    /**
+     * Option for configuring renegotiation after initial handshake. Value for
+     * use with OptionGet and OptionSet.
+     *
+     * See also: SSL_ENABLE_RENEGOTIATION in /usr/include/nss3/ssl.h
+     */
+    public static final int ENABLE_RENEGOTIATION = getSSLEnableRenegotiation();
+
+    /**
+     * Option for requiring safe negotiation. Value for use with OptionGet and
+     * OptionSet.
+     *
+     * See also: SSL_REQUIRE_SAFE_NEGOTIATION in /usr/include/nss3/ssl.h
+     */
+    public static final int REQUIRE_SAFE_NEGOTIATION = getSSLRequireSafeNegotiation();
+
+    /**
+     * Value for never allowing renegotiation after initial handshake. Value
+     * for use with ENABLE_RENEGOTIATION with OptionGet and OptionSet.
+     *
+     * See also: SSL_RENEGOTIATE_NEVER in /usr/include/nss3/ssl.h
+     */
+    public static final int RENEGOTIATE_NEVER = getSSLRenegotiateNever();
+
+    /**
+     * Value for always allowing renegotiation after initial handshake,
+     * regardless of whether or not the peer's client hellow bears the
+     * renegotiation info extension; unsafe. Value for use with
+     * ENABLE_RENEGOTIATION with OptionGet and OptionSet.
+     *
+     * See also: SSL_RENEGOTIATE_UNRESTRICTED in /usr/include/nss3/ssl.h
+     */
+    public static final int RENEGOTIATE_UNRESTRICTED = getSSLRenegotiateUnrestricted();
+
+    /**
+     * Value for allowing renegotiation after initial handshake with the TLS
+     * renegotiation_info extension; safe. Value for use with
+     * ENABLE_RENEGOTIATION with OptionGet and OptionSet.
+     *
+     * See also: SSL_RENEGOTIATE_REQUIRES_XTN in /usr/include/nss3/ssl.h
+     */
+    public static final int RENEGOTIATE_REQUIRES_XTN = getSSLRenegotiateRequiresXtn();
+
+    /**
+     * Value for disallowing unsafe renegotiation in server sockets only, but
+     * allows clients to continue to renegotiate with vulnerable servers.
+     * Value for use with ENABLE_RENEGOTIATION with OptionGet and OptionSet.
+     *
+     * See also: SSL_RENEGOTIATE_TRANSITIONAL in /usr/include/nss3/ssl.h
+     */
+    public static final int RENEGOTIATE_TRANSITIONAL = getSSLRenegotiateTransitional();
+
+    /**
+     * Option for sending SCSV in handshakes. Value for use with OptionGet and
+     * OptionSet.
+     *
+     * See also: SSL_ENABLE_FALLBACK_SCSV in /usr/include/nss3/ssl.h
+     */
+    public static final int ENABLE_FALLBACK_SCSV = getSSLEnableFallbackSCSV();
+
+    /**
+     * Value for never requiring a certificate. Value for use with
+     * SSL_REQUIRE_CERTIFICATE with OptionGet and OptionSet.
+     *
+     * See also: SSL_REQUIRE_NEVER in /usr/include/nss3/ssl.h
+     */
+    public static final int REQUIRE_NEVER = getSSLRequireNever();
+
+    /**
+     * Value for always requiring a certificate. Value for use with
+     * SSL_REQUIRE_CERTIFICATE with OptionGet and OptionSet.
+     *
+     * See also: SSL_REQUIRE_ALWAYS in /usr/include/nss3/ssl.h
+     */
+    public static final int REQUIRE_ALWAYS = getSSLRequireAlways();
+
+    /**
+     * Value for requiring a certificate only on the first handshake. Value
+     * for use with SSL_REQUIRE_CERTIFICATE with OptionGet and OptionSet.
+     *
+     * See also: SSL_REQUIRE_FIRST_HANDSHAKE in /usr/include/nss3/ssl.h
+     */
+    public static final int REQUIRE_FIRST_HANDSHAKE = getSSLRequireFirstHandshake();
+
+    /**
+     * Value for requiring a certificate but not erring if the peer doesn't
+     * provide one. Value for use with SSL_REQUIRE_CERTIFICATE with OptionGet
+     * and OptionSet.
+     *
+     * See also: SSL_REQUIRE_NO_ERROR in /usr/include/nss3/ssl.h
+     */
+    public static final int REQUIRE_NO_ERROR = getSSLRequireNoError();
+
+    /**
      * Import a file descriptor to create a new SSL file descriptor out of it.
      *
      * See also: SSL_ImportFD in /usr/include/nss3/ssl.h
@@ -218,6 +319,13 @@ public class SSL {
     public static native int ResetHandshake(SSLFDProxy fd, boolean asServer);
 
     /**
+     * Rehandshake an existing socket, optionally flushing the cache line.
+     *
+     * See also: SSL_ReHandshake in /usr/include/nss3/ssl.h
+     */
+    public static native int ReHandshake(SSLFDProxy fd, boolean flushCache);
+
+    /**
      * Force a handshake to occur if not started, else step one.
      *
      * See also: SSL_ForceHandshake in /usr/include/nss3/ssl.h
@@ -273,6 +381,20 @@ public class SSL {
     public static native PK11Cert[] PeerCertificateChain(SSLFDProxy fd) throws Exception;
 
     /**
+     * Send the TLS 1.3 Certificate Request as a server; experimental.
+     *
+     * See also: SSL_SendCertificateRequest in /usr/include/nss3/sslexp.h
+     */
+    public static native int SendCertificateRequest(SSLFDProxy fd);
+
+    /**
+     * Send the TLS 1.3 KeyUpdate Request; experimental.
+     *
+     * See also: SSL_KeyUpdate in /usr/include/nss3/sslexp.h
+     */
+    public static native int KeyUpdate(SSLFDProxy fd, boolean requestUpdate);
+
+    /**
      * Use client authentication; set client certificate from SSLFDProxy.
      *
      * See also: SSL_GetClientAuthDataHook in /usr/include/nss3/ssl.h,
@@ -312,10 +434,29 @@ public class SSL {
      */
     public static native void RemoveCallbacks(SSLFDProxy fd);
 
+    /*
+     * Enable handshake completion status checking.
+     *
+     * See also: SSL_HandshakeCallback in /usr/include/nss3/ssl.h
+     */
+    public static native int EnableHandshakeCallback(SSLFDProxy fd);
+
     /* Internal methods for querying constants. */
     private static native int getSSLRequestCertificate();
     private static native int getSSLRequireCertificate();
     private static native int getSSLSECSuccess();
     private static native int getSSLSECFailure();
     private static native int getSSLSECWouldBlock();
+    private static native int getSSLEnablePostHandshakeAuth();
+    private static native int getSSLEnableRenegotiation();
+    private static native int getSSLRequireSafeNegotiation();
+    private static native int getSSLRenegotiateNever();
+    private static native int getSSLRenegotiateUnrestricted();
+    private static native int getSSLRenegotiateRequiresXtn();
+    private static native int getSSLRenegotiateTransitional();
+    private static native int getSSLEnableFallbackSCSV();
+    private static native int getSSLRequireNever();
+    private static native int getSSLRequireAlways();
+    private static native int getSSLRequireFirstHandshake();
+    private static native int getSSLRequireNoError();
 }

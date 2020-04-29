@@ -2,6 +2,7 @@
 #include <nss.h>
 #include <ssl.h>
 #include <sslerr.h>
+#include <sslexp.h>
 #include <limits.h>
 #include <stdint.h>
 #include <jni.h>
@@ -599,6 +600,22 @@ Java_org_mozilla_jss_nss_SSL_ResetHandshake(JNIEnv *env, jclass clazz,
 }
 
 JNIEXPORT int JNICALL
+Java_org_mozilla_jss_nss_SSL_ReHandshake(JNIEnv *env, jclass clazz,
+    jobject fd, jboolean flushCache)
+{
+    PRFileDesc *real_fd = NULL;
+
+    PR_ASSERT(env != NULL && fd != NULL);
+    PR_SetError(0, 0);
+
+    if (JSS_PR_getPRFileDesc(env, fd, &real_fd) != PR_SUCCESS) {
+        return SECFailure;
+    }
+
+    return SSL_ReHandshake(real_fd, flushCache);
+}
+
+JNIEXPORT int JNICALL
 Java_org_mozilla_jss_nss_SSL_ForceHandshake(JNIEnv *env, jclass clazz,
     jobject fd)
 {
@@ -752,6 +769,38 @@ Java_org_mozilla_jss_nss_SSL_PeerCertificateChain(JNIEnv *env, jclass clazz,
 }
 
 JNIEXPORT jint JNICALL
+Java_org_mozilla_jss_nss_SSL_SendCertificateRequest(JNIEnv *env, jclass clazz,
+    jobject fd)
+{
+    PRFileDesc *real_fd = NULL;
+
+    PR_ASSERT(env != NULL && fd != NULL);
+    PR_SetError(0, 0);
+
+    if (JSS_PR_getPRFileDesc(env, fd, &real_fd) != PR_SUCCESS) {
+        return SECFailure;
+    }
+
+    return SSL_SendCertificateRequest(real_fd);
+}
+
+JNIEXPORT jint JNICALL
+Java_org_mozilla_jss_nss_SSL_KeyUpdate(JNIEnv *env, jclass clazz,
+    jobject fd, jboolean requestUpdate)
+{
+    PRFileDesc *real_fd = NULL;
+
+    PR_ASSERT(env != NULL && fd != NULL);
+    PR_SetError(0, 0);
+
+    if (JSS_PR_getPRFileDesc(env, fd, &real_fd) != PR_SUCCESS) {
+        return SECFailure;
+    }
+
+    return SSL_KeyUpdate(real_fd, requestUpdate == JNI_TRUE ? PR_TRUE : PR_FALSE);
+}
+
+JNIEXPORT jint JNICALL
 Java_org_mozilla_jss_nss_SSL_AttachClientCertCallback(JNIEnv *env, jclass clazz,
     jobject fd)
 {
@@ -843,6 +892,27 @@ Java_org_mozilla_jss_nss_SSL_RemoveCallbacks(JNIEnv *env, jclass clazz,
 }
 
 JNIEXPORT jint JNICALL
+Java_org_mozilla_jss_nss_SSL_EnableHandshakeCallback(JNIEnv *env, jclass clazz,
+    jobject fd)
+{
+    PRFileDesc *real_fd = NULL;
+    jobject fd_ref = NULL;
+
+    PR_ASSERT(env != NULL && fd != NULL);
+    PR_SetError(0, 0);
+
+    if (JSS_PR_getPRFileDesc(env, fd, &real_fd) != PR_SUCCESS) {
+        return SECFailure;
+    }
+
+    if (JSS_NSS_getGlobalRef(env, fd, &fd_ref) != PR_SUCCESS) {
+        return SECFailure;
+    }
+
+    return SSL_HandshakeCallback(real_fd, JSSL_SSLFDHandshakeComplete, fd_ref);
+}
+
+JNIEXPORT jint JNICALL
 Java_org_mozilla_jss_nss_SSL_getSSLRequestCertificate(JNIEnv *env, jclass clazz)
 {
     return SSL_REQUEST_CERTIFICATE;
@@ -870,4 +940,76 @@ JNIEXPORT jint JNICALL
 Java_org_mozilla_jss_nss_SSL_getSSLSECWouldBlock(JNIEnv *env, jclass clazz)
 {
     return SECWouldBlock;
+}
+
+JNIEXPORT jint JNICALL
+Java_org_mozilla_jss_nss_SSL_getSSLEnablePostHandshakeAuth(JNIEnv *env, jclass clazz)
+{
+    return SSL_ENABLE_POST_HANDSHAKE_AUTH;
+}
+
+JNIEXPORT jint JNICALL
+Java_org_mozilla_jss_nss_SSL_getSSLEnableRenegotiation(JNIEnv *env, jclass clazz)
+{
+    return SSL_ENABLE_RENEGOTIATION;
+}
+
+JNIEXPORT jint JNICALL
+Java_org_mozilla_jss_nss_SSL_getSSLRequireSafeNegotiation(JNIEnv *env, jclass clazz)
+{
+    return SSL_REQUIRE_SAFE_NEGOTIATION;
+}
+
+JNIEXPORT jint JNICALL
+Java_org_mozilla_jss_nss_SSL_getSSLRenegotiateNever(JNIEnv *env, jclass clazz)
+{
+    return SSL_RENEGOTIATE_NEVER;
+}
+
+JNIEXPORT jint JNICALL
+Java_org_mozilla_jss_nss_SSL_getSSLRenegotiateUnrestricted(JNIEnv *env, jclass clazz)
+{
+    return SSL_RENEGOTIATE_UNRESTRICTED;
+}
+
+JNIEXPORT jint JNICALL
+Java_org_mozilla_jss_nss_SSL_getSSLRenegotiateRequiresXtn(JNIEnv *env, jclass clazz)
+{
+    return SSL_RENEGOTIATE_REQUIRES_XTN;
+}
+
+JNIEXPORT jint JNICALL
+Java_org_mozilla_jss_nss_SSL_getSSLRenegotiateTransitional(JNIEnv *env, jclass clazz)
+{
+    return SSL_RENEGOTIATE_TRANSITIONAL;
+}
+
+JNIEXPORT jint JNICALL
+Java_org_mozilla_jss_nss_SSL_getSSLEnableFallbackSCSV(JNIEnv *env, jclass clazz)
+{
+    return SSL_ENABLE_FALLBACK_SCSV;
+}
+
+JNIEXPORT jint JNICALL
+Java_org_mozilla_jss_nss_SSL_getSSLRequireNever(JNIEnv *env, jclass clazz)
+{
+    return SSL_REQUIRE_NEVER;
+}
+
+JNIEXPORT jint JNICALL
+Java_org_mozilla_jss_nss_SSL_getSSLRequireAlways(JNIEnv *env, jclass clazz)
+{
+    return SSL_REQUIRE_ALWAYS;
+}
+
+JNIEXPORT jint JNICALL
+Java_org_mozilla_jss_nss_SSL_getSSLRequireFirstHandshake(JNIEnv *env, jclass clazz)
+{
+    return SSL_REQUIRE_FIRST_HANDSHAKE;
+}
+
+JNIEXPORT jint JNICALL
+Java_org_mozilla_jss_nss_SSL_getSSLRequireNoError(JNIEnv *env, jclass clazz)
+{
+    return SSL_REQUIRE_NO_ERROR;
 }
