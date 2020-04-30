@@ -14,6 +14,8 @@ import org.mozilla.jss.ssl.javax.*;
 import org.mozilla.jss.provider.javax.crypto.*;
 
 public class TestSSLEngine {
+    public static boolean debug = false;
+
     public static void initialize(String[] args) throws Exception {
         CryptoManager cm = CryptoManager.getInstance();
         cm.setPasswordCallback(new FilePasswordCallback(args[1]));
@@ -366,6 +368,22 @@ public class TestSSLEngine {
         ByteBuffer client_unwrap = ByteBuffer.allocate(max_data);
         sendTestData(server_eng, client_eng, server_msg, s2c_buffer, client_unwrap);
 
+        String clientMessage = "Cooking MCs";
+        for (int i = 1; i < 10; i++) { clientMessage += clientMessage; }
+
+        client_msg = ByteBuffer.wrap(clientMessage.getBytes());
+        c2s_buffer = ByteBuffer.allocate(2*clientMessage.length());
+        server_unwrap = ByteBuffer.allocate(2*clientMessage.length());
+        sendTestData(client_eng, server_eng, client_msg, c2s_buffer, server_unwrap);
+
+        String serverMessage = "like a pound of bacon.";
+        for (int i = 1; i < 10; i++) { serverMessage += serverMessage; }
+
+        server_msg = ByteBuffer.wrap(serverMessage.getBytes());
+        s2c_buffer = ByteBuffer.allocate(2*serverMessage.length());
+        client_unwrap = ByteBuffer.allocate(2*serverMessage.length());
+        sendTestData(server_eng, client_eng, server_msg, s2c_buffer, client_unwrap);
+
         System.err.println("Done testing post-handshake transfer! Success!");
     }
 
@@ -505,7 +523,9 @@ public class TestSSLEngine {
 
                 if (server_eng instanceof JSSEngineReferenceImpl) {
                     ((JSSEngineReferenceImpl) server_eng).setName("JSS Server " + context);
-                    ((JSSEngineReferenceImpl) server_eng).enableSafeDebugLogging(7377);
+                    if (debug) {
+                        ((JSSEngineReferenceImpl) server_eng).enableSafeDebugLogging(7377);
+                    }
                 }
 
                 if (client_auth) {
@@ -568,7 +588,9 @@ public class TestSSLEngine {
                 server_eng.setUseClientMode(false);
 
                 if (server_eng instanceof JSSEngineReferenceImpl) {
-                    ((JSSEngineReferenceImpl) server_eng).enableSafeDebugLogging(7374);
+                    if (debug) {
+                        ((JSSEngineReferenceImpl) server_eng).enableSafeDebugLogging(7374);
+                    }
                 }
 
                 configureSSLEngine(client_eng, protocol, cipher_suite);
@@ -616,7 +638,9 @@ public class TestSSLEngine {
 
                 if (server_eng instanceof JSSEngineReferenceImpl) {
                     ((JSSEngineReferenceImpl) server_eng).setName("JSS Server " + context);
-                    ((JSSEngineReferenceImpl) server_eng).enableSafeDebugLogging(7377);
+                    if (debug) {
+                        ((JSSEngineReferenceImpl) server_eng).enableSafeDebugLogging(7377);
+                    }
                 }
 
                 configureSSLEngine(client_eng, protocol, cipher_suite);
