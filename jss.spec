@@ -7,8 +7,8 @@ URL:            http://www.dogtagpki.org/wiki/JSS
 License:        MPLv1.1 or GPLv2+ or LGPLv2+
 
 Version:        4.7.0
-Release:        0.1%{?_timestamp}%{?_commit_id}%{?dist}
-%global         _phase -b1
+Release:        0.2%{?_timestamp}%{?_commit_id}%{?dist}
+%global         _phase -b2
 
 # To generate the source tarball:
 # $ git clone https://github.com/dogtagpki/jss.git
@@ -81,7 +81,6 @@ This only works with gcj. Other JREs require that JCE providers be signed.
 ################################################################################
 
 Summary:        Java Security Services (JSS) Javadocs
-Group:          Documentation
 Requires:       jss = %{version}-%{release}
 
 %description javadoc
