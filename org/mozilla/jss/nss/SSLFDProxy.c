@@ -3,6 +3,7 @@
 #include <ssl.h>
 #include <pk11pub.h>
 #include <jni.h>
+#include <secerr.h>
 
 #include "java_ids.h"
 #include "jssutil.h"
@@ -269,4 +270,100 @@ JSSL_SSLFDHandshakeComplete(PRFileDesc *fd, void *client_data)
     }
 
     (*env)->SetBooleanField(env, sslfd_proxy, handshakeCompleteField, JNI_TRUE);
+}
+
+SECStatus
+JSSL_SSLFDAsyncCertAuthCallback(void *arg, PRFileDesc *fd, PRBool checkSig, PRBool isServer)
+{
+    /* We know that arg is our GlobalRefProxy instance pointing to the
+     * SSLFDProxy class instance. This lets us ignore the isServer parameter,
+     * because we can infer that from our JSSEngine instance. Additionally,
+     * because we have no control over whether or not our TrustManagers do
+     * signature verification (we hope they do!) we ignore checkSig as well.
+     *
+     * All we need to do then is set SSLFDProxy@fd_ref's needCertValidation
+     * to true.
+     */
+    JNIEnv *env = NULL;
+    jobject sslfd_proxy = (jobject) arg;
+    jclass sslfdProxyClass;
+    jfieldID needCertValidationField;
+
+    if (arg == NULL || fd == NULL || JSS_javaVM == NULL) {
+        return SECFailure;
+    }
+
+    if ((*JSS_javaVM)->AttachCurrentThread(JSS_javaVM, (void**)&env, NULL) != JNI_OK || env == NULL) {
+        return SECFailure;
+    }
+
+    sslfdProxyClass = (*env)->GetObjectClass(env, sslfd_proxy);
+    if (sslfdProxyClass == NULL) {
+        return SECFailure;
+    }
+
+    needCertValidationField = (*env)->GetFieldID(env, sslfdProxyClass,
+                                                 "needCertValidation", "Z");
+    if (needCertValidationField == NULL) {
+        return SECFailure;
+    }
+
+    (*env)->SetBooleanField(env, sslfd_proxy, needCertValidationField, JNI_TRUE);
+
+    return SECWouldBlock;
+}
+
+SECStatus
+JSSL_SSLFDSyncCertAuthCallback(void *arg, PRFileDesc *fd, PRBool checkSig, PRBool isServer)
+{
+    /* We know that arg is our GlobalRefProxy instance pointing to the
+     * SSLFDProxy class instance. This lets us ignore the isServer parameter,
+     * because we can infer that from our JSSEngine instance. Additionally,
+     * because we have no control over whether or not our TrustManagers do
+     * signature verification (we hope they do!) we ignore checkSig as well.
+     *
+     * All we need to do then is set SSLFDProxy@fd_ref's needCertValidation
+     * to true.
+     */
+    JNIEnv *env = NULL;
+    jobject sslfd_proxy = (jobject) arg;
+    jclass sslfdProxyClass;
+    jmethodID certAuthHandlerMethod;
+    PRErrorCode ret;
+
+    if (arg == NULL || fd == NULL || JSS_javaVM == NULL) {
+        PR_SetError(SEC_ERROR_INVALID_ARGS, 0);
+        return SECFailure;
+    }
+
+    if ((*JSS_javaVM)->AttachCurrentThread(JSS_javaVM, (void**)&env, NULL) != JNI_OK || env == NULL) {
+        PR_SetError(PR_UNKNOWN_ERROR, 0);
+        return SECFailure;
+    }
+
+    sslfdProxyClass = (*env)->GetObjectClass(env, sslfd_proxy);
+    if (sslfdProxyClass == NULL) {
+        PR_SetError(PR_UNKNOWN_ERROR, 0);
+        return SECFailure;
+    }
+
+    certAuthHandlerMethod = (*env)->GetMethodID(env, sslfdProxyClass,
+        "invokeCertAuthHandler", "()I");
+    if (certAuthHandlerMethod == NULL) {
+        PR_SetError(PR_UNKNOWN_ERROR, 0);
+        return SECFailure;
+    }
+
+    ret = (*env)->CallIntMethod(env, sslfd_proxy, certAuthHandlerMethod);
+    if ((*env)->ExceptionOccurred(env) != NULL) {
+        ret = PR_UNKNOWN_ERROR;
+    }
+
+    PR_SetError(ret, 0);
+
+    if (ret == 0) {
+        return SECSuccess;
+    }
+
+    return SECFailure;
 }
