@@ -42,6 +42,103 @@ public class TestSSLEngine {
 
         SSLEngine raw_eng = ctx.createSSLEngine();
         assert(raw_eng instanceof JSSEngine);
+
+        System.out.println("Testing basic assumptions...");
+        testBasics(ctx);
+
+        System.out.println("Testing byte buffer semantics...");
+        testByteBufferSemantics(ctx);
+    }
+
+    public static void testBasics(SSLContext ctx) throws Exception {
+        // Tests adapted from jdk11u test suite for compliance.
+        SSLEngine ssle = ctx.createSSLEngine();
+
+        // Tests {get,set}EnabledCipherSuites()
+        String[] suites = ssle.getSupportedCipherSuites();
+        assert suites.length >= 2;
+        String secondSuite = suites[1];
+        String[] oneSuites = new String[]{ secondSuite };
+        ssle.setEnabledCipherSuites(oneSuites);
+        suites = ssle.getEnabledCipherSuites();
+        assert suites.length == 1;
+        assert suites[0].equals(secondSuite);
+
+        // Tests {get,set}EnabledProtocols()
+        String[] protocols = ssle.getSupportedProtocols();
+        assert protocols.length >= 2;
+        String secondProtocol = protocols[1];
+        String[] oneProtocols = new String[]{ secondProtocol };
+        ssle.setEnabledProtocols(oneProtocols);
+        protocols = ssle.getEnabledProtocols();
+        assert protocols.length == 1;
+        assert protocols[0].equals(secondProtocol);
+
+        // Tests {get,set}UseClientMode
+        ssle.setUseClientMode(true);
+        assert ssle.getUseClientMode() == true;
+        ssle.setUseClientMode(false);
+        assert ssle.getUseClientMode() == false;
+
+        // Tests {get,set}{Want,Need}ClientAuth. Note that want and
+        // need are mutually exclusive in that they both can't be
+        // true.
+        ssle.setWantClientAuth(false);
+        assert ssle.getWantClientAuth() == false;
+        ssle.setWantClientAuth(true);
+        assert ssle.getWantClientAuth() == true;
+        ssle.setNeedClientAuth(true);
+        assert ssle.getNeedClientAuth() == true;
+        ssle.setNeedClientAuth(false);
+        assert ssle.getNeedClientAuth() == false;
+
+        ssle.setUseClientMode(true);
+        try {
+            ByteBuffer buf = ByteBuffer.allocate(1024);
+            byte[] random_data = "HELLO HELLO".getBytes();
+            ByteBuffer random_buf = ByteBuffer.wrap(random_data);
+            ssle.wrap(buf, buf);
+            ssle.unwrap(random_buf, buf);
+            assert false;
+        } catch (SSLException e) {
+            assert true;
+        }
+    }
+
+    public static void testByteBufferSemantics(SSLContext ctx) throws Exception {
+        // Tests adapted from jdk11u test suite for compliance. Unlike JDK, we
+        // gracefully handle null buffers when possible.
+        SSLEngine ssle = ctx.createSSLEngine();
+
+        ByteBuffer roBB = ByteBuffer.allocate(40).asReadOnlyBuffer();
+
+        ByteBuffer bb1K = ByteBuffer.allocate(1024);
+        ByteBuffer bb2K = ByteBuffer.allocate(2048);
+        ByteBuffer bb4K = ByteBuffer.allocate(5096);
+        ByteBuffer bb8K = ByteBuffer.allocate(10192);
+
+        ByteBuffer[] bufs = new ByteBuffer[]{ bb1K, bb2K, bb4K, bb8K };
+
+        try {
+            ssle.unwrap(bb1K, bufs, 1, 5);
+            assert false;
+        } catch (IllegalArgumentException iae) {
+            assert true;
+        }
+
+        try {
+            ssle.unwrap(bb1K, bufs, -1, 5);
+            assert false;
+        } catch (IndexOutOfBoundsException iae) {
+            assert true;
+        }
+
+        try {
+            ssle.unwrap(bb1K, bufs, -3, 4);
+            assert false;
+        } catch (IndexOutOfBoundsException iae) {
+            assert true;
+        }
     }
 
     public static JSSParameters createParameters() throws Exception {
