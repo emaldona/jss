@@ -25,7 +25,6 @@ COPY . /home/sandbox/jss
 WORKDIR /home/sandbox/jss
 CMD true \
         && export JAVA_HOME=/usr/lib64/jvm/java-11-openjdk-11 \
-        && export WITH_INTERNET=1 \
         && rm -rf build \
         && mkdir build \
         && cd build \
