@@ -228,6 +228,17 @@ public class JSSEngineReferenceImpl extends JSSEngine {
                 throw new SSLException("Unable to attach client certificate auth callback.");
             }
         }
+
+        if (hostname == null) {
+            // When we're a client with no hostname, assume we're running
+            // under standard JDK JCA semantics with no hostname available.
+            // Bypass NSS's hostname check by adding a BadCertHandler, which
+            // check ONLY for the bad hostname error and allows it.
+            ssl_fd.badCertHandler = new BypassBadHostname(ssl_fd, 0);
+            if (SSL.ConfigSyncBadCertCallback(ssl_fd) != SSL.SECSuccess) {
+                throw new SSLException("Unable to attach bad cert callback.");
+            }
+        }
     }
 
     private void initServer() throws SSLException {
@@ -390,7 +401,7 @@ public class JSSEngineReferenceImpl extends JSSEngine {
             // from Runnable, so we can reuse it here as well. We can create
             // it ahead of time though. In this case, checkNeedCertValidation()
             // is never called.
-            ssl_fd.handler = new CertValidationTask(ssl_fd);
+            ssl_fd.certAuthHandler = new CertValidationTask(ssl_fd);
 
             if (SSL.ConfigSyncTrustManagerCertAuthCallback(ssl_fd) == SSL.SECFailure) {
                 throw new SSLException("Unable to configure TrustManager validation on this JSSengine: " + errorText(PR.GetError()));
@@ -1637,6 +1648,20 @@ public class JSSEngineReferenceImpl extends JSSEngine {
             seen_exception = true;
             ssl_exception = new SSLException(msg, excpt);
             return nss_code;
+        }
+    }
+
+    private class BypassBadHostname extends BadCertHandler {
+        public BypassBadHostname(SSLFDProxy fd, int error) {
+            super(fd, error);
+        }
+
+        public int check(SSLFDProxy fd, int error) {
+            if (error == SSLErrors.BAD_CERT_DOMAIN) {
+                return 0;
+            }
+
+            return error;
         }
     }
 }
