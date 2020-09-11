@@ -330,6 +330,12 @@ public final class CryptoManager implements TokenSupplier
         reloadModules();
     }
 
+    public static boolean isInitialized() {
+        synchronized (CryptoManager.class) {
+            return instance != null;
+        }
+    }
+
     /**
      * Retrieve the single instance of CryptoManager.
      * This cannot be called before initialization.
@@ -364,6 +370,9 @@ public final class CryptoManager implements TokenSupplier
          * However, in order for the JSSProvider to load, we need to
          * release our lock on CryptoManager (and in particular, on
          * CryptoManager.instance).
+         *
+         * For a more complete discussion see docs/usage/cryptomanager.md
+         * in the source distribution.
          */
         java.security.Provider p = Security.getProvider("Mozilla-JSS");
 
@@ -374,7 +383,9 @@ public final class CryptoManager implements TokenSupplier
             }
 
             // Otherwise, work around this by looking at what JSSProvider
-            // created.
+            // created. Note that this will work when CryptoManager no
+            // longer is a singleton and becomes tied to a specific
+            // JSSProvider instance.
             if (p instanceof JSSProvider) {
                 JSSProvider jssProvider = (JSSProvider) p;
                 assert jssProvider.getCryptoManager() != null;
