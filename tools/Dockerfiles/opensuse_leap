@@ -6,9 +6,9 @@ RUN true \
         && zypper update -y \
         && zypper install -y \
                           gcc make rpm-build cmake \
-                          ws-jaxme java-11-openjdk mozilla-nss-tools \
-                          apache-commons-codec apache-commons-lang gcc-c++ \
-                          java-11-openjdk-devel javapackages-tools slf4j mozilla-nss \
+                          ws-jaxme java-11-openjdk-devel mozilla-nss-tools \
+                          apache-commons-lang3 gcc-c++ \
+                          javapackages-tools slf4j mozilla-nss \
                           zlib-devel mozilla-nss-devel mozilla-nspr-devel perl \
                           zip unzip junit4 \
         && mkdir -p /home/sandbox \
