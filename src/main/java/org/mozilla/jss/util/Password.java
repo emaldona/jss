@@ -8,6 +8,7 @@ import java.io.CharConversionException;
 import java.io.Console;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.Arrays;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -82,7 +83,7 @@ public class Password implements PasswordCallback, Cloneable,
      */
     @Override
     public synchronized boolean equals(Object obj) {
-        if (obj == null || !(obj instanceof Password)) {
+        if (!(obj instanceof Password)) {
             return false;
         }
         Password pw = (Password) obj;
@@ -98,6 +99,14 @@ public class Password implements PasswordCallback, Cloneable,
             }
         }
         return true;
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + Arrays.hashCode(password);
+        return result;
     }
 
     /**
