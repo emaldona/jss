@@ -15,7 +15,6 @@ import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.SocketTimeoutException;
 import java.util.Vector;
-import java.lang.NumberFormatException;
 
 import org.mozilla.jss.CryptoManager;
 import org.mozilla.jss.crypto.CryptoToken;
@@ -113,7 +112,7 @@ public class JSS_SelfServServer  {
             if (args[3].equalsIgnoreCase("true") == true)
                 TestInetAddress = true;
             if (args.length >= 5)
-                port = new Integer(Integer.valueOf(args[4]));
+                port = Integer.parseInt(args[4]);
             if (args.length >=6 && args[5].equalsIgnoreCase("verbose")) {
                 bVerbose = true;
             }
@@ -265,6 +264,7 @@ public class JSS_SelfServServer  {
             this.socketCntr = cntr;
         }
 
+        @Override
         public void run() {
 
             try {
@@ -346,6 +346,7 @@ public class JSS_SelfServServer  {
             this.who = who;
             this.boss = boss;
         }
+        @Override
         public void handshakeCompleted(SSLHandshakeCompletedEvent event) {
             try {
                 String mesg = who + " got a completed handshake ";
