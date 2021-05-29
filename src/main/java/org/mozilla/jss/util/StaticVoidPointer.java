@@ -12,12 +12,12 @@ package org.mozilla.jss.util;
  * resulting pointer from getting tracked in the usual NativeProxy allocation
  * trackers and avoiding a double free.
  */
-public class StaticVoidPointer extends NativeProxy
-{
+public class StaticVoidPointer extends NativeProxy {
     public StaticVoidPointer(byte[] pointer) {
         super(pointer, false);
     }
 
+    @Override
     protected void releaseNativeResources() {
         /* Do nothing: this is a static pointer that doesn't need freeing. */
     }

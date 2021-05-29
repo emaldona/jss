@@ -36,6 +36,7 @@ public abstract class ClassServer implements Runnable {
      * and sends back the bytes for the file (or error
      * if the file is not found or the response was malformed).
      */
+    @Override
     public void run() {
         Socket  socket             = null;
         boolean socketListenStatus = true;
@@ -87,10 +88,10 @@ public abstract class ClassServer implements Runnable {
 
         for ( int i=0; i<(supportedCiphers.size()-1); i++ ) {
             System.out.print(i + " SC " +
-            new Integer(supportedCiphers.elementAt(i)).intValue());
+            supportedCiphers.elementAt(i));
 
             for ( int j=0; j<(Constants.jssCipherSuites.length); j++ ) {
-               if (new Integer(supportedCiphers.elementAt(i)).intValue()
+               if (Integer.parseInt(supportedCiphers.elementAt(i))
                    == Constants.jssCipherSuites[j].value ) {
                     System.out.print(" JSSC ");
                     System.out.println(" ["+ i +"]\t" +

@@ -231,6 +231,7 @@ public class JSSSocket extends SSLSocket {
      *
      * @see java.net.Socket#getChannel()
      */
+    @Override
     public JSSSocketChannel getChannel() {
         if (parent.getChannel() == null) {
             return null;
@@ -260,6 +261,7 @@ public class JSSSocket extends SSLSocket {
      *
      * @see java.net.Socket#getInputStream()
      */
+    @Override
     public InputStream getInputStream() throws IOException {
         if (channel == null) {
             init();
@@ -273,6 +275,7 @@ public class JSSSocket extends SSLSocket {
      *
      * @see java.net.Socket#getOutputStream()
      */
+    @Override
     public OutputStream getOutputStream() throws IOException {
         if (channel == null) {
             init();
@@ -703,7 +706,7 @@ public class JSSSocket extends SSLSocket {
     }
 
     @Override
-    public void close() throws IOException {
+    public synchronized void close() throws IOException {
         getInternalChannel().close();
         engine.cleanup();
         engine = null;
@@ -772,12 +775,12 @@ public class JSSSocket extends SSLSocket {
     }
 
     @Override
-    public int getSoTimeout() throws SocketException {
+    public synchronized int getSoTimeout() throws SocketException {
         return parent.getSoTimeout();
     }
 
     @Override
-    public void setSoTimeout(int timeout) throws SocketException {
+    public synchronized void setSoTimeout(int timeout) throws SocketException {
         parent.setSoTimeout(timeout);
     }
 
@@ -797,22 +800,22 @@ public class JSSSocket extends SSLSocket {
     }
 
     @Override
-    public int getSendBufferSize() throws SocketException {
+    public synchronized int getSendBufferSize() throws SocketException {
         return parent.getSendBufferSize();
     }
 
     @Override
-    public void setSendBufferSize(int size) throws SocketException {
+    public synchronized void setSendBufferSize(int size) throws SocketException {
         parent.setSendBufferSize(size);
     }
 
     @Override
-    public int getReceiveBufferSize() throws SocketException {
+    public synchronized int getReceiveBufferSize() throws SocketException {
         return parent.getReceiveBufferSize();
     }
 
     @Override
-    public void setReceiveBufferSize(int size) throws SocketException {
+    public synchronized void setReceiveBufferSize(int size) throws SocketException {
         parent.setReceiveBufferSize(size);
     }
 
@@ -888,15 +891,18 @@ public class JSSSocket extends SSLSocket {
 
     /* == stubs for Java 9 Socket == */
 
+    @Override
     public <T> Socket setOption(SocketOption<T> name, T value) throws IOException {
         getInternalChannel().setOption(name, value);
         return this;
     }
 
+    @Override
     public <T> T getOption(SocketOption<T> name) throws IOException {
         return getInternalChannel().getOption(name);
     }
 
+    @Override
     public Set<SocketOption<?>> supportedOptions() {
         return getInternalChannel().supportedOptions();
     }

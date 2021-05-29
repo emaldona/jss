@@ -3,10 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package org.mozilla.jss;
 
-import java.lang.NullPointerException;
-import java.security.Provider;
-
 import java.io.InputStream;
+import java.security.Provider;
 
 public final class JSSProvider extends java.security.Provider {
     public static boolean ENABLE_JSSENGINE = true;
@@ -50,7 +48,7 @@ public final class JSSProvider extends java.security.Provider {
     public JSSProvider(InputStream config) throws Exception {
         this(false);
 
-        cm = loader.init(config);
+        cm = JSSLoader.init(config);
         initializeProvider();
     }
 
@@ -63,9 +61,10 @@ public final class JSSProvider extends java.security.Provider {
      *
      * If the JSSProvider is already loaded, this is a no-op.
      */
+    @Override
     public Provider configure(String arg) {
         try {
-            cm = loader.init(arg);
+            cm = JSSLoader.init(arg);
         } catch (NullPointerException npe) {
             throw npe;
         } catch (Exception e) {
@@ -428,6 +427,7 @@ public final class JSSProvider extends java.security.Provider {
         }
     }
 
+    @Override
     public String toString() {
         String mozillaProviderVersion = JSS_MAJOR_VERSION + "." +
                                         JSS_MINOR_VERSION;
