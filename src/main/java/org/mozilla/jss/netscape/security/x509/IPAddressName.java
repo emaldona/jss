@@ -128,6 +128,7 @@ public class IPAddressName implements GeneralNameInterface {
     /**
      * Return the type of the GeneralName.
      */
+    @Override
     public int getType() {
         return (GeneralNameInterface.NAME_IP);
     }
@@ -148,6 +149,7 @@ public class IPAddressName implements GeneralNameInterface {
      * @param out the DER stream to encode the IPAddressName to.
      * @exception IOException on encoding errors.
      */
+    @Override
     public void encode(DerOutputStream out) throws IOException {
         out.putOctetString(address);
     }
@@ -155,6 +157,7 @@ public class IPAddressName implements GeneralNameInterface {
     /**
      * Return a printable string of IPaddress
      */
+    @Override
     public String toString() {
         StringBuilder r = new StringBuilder("IPAddress: ");
         ByteBuffer buf = ByteBuffer.wrap(address);
@@ -209,8 +212,8 @@ public class IPAddressName implements GeneralNameInterface {
         try {
             int end = start + nt;
             for (int i = start; i < end; i++) {
-                Integer j = new Integer(Integer.valueOf(st.nextToken()));
-                address[i] = (byte) j.intValue();
+             // parse token into Integer then downcast into byte to avoid NumberFormatException
+                address[i] = (byte) Integer.parseInt(st.nextToken());
             }
         } catch (NumberFormatException e) {
             throw new InvalidIPAddressException(s);

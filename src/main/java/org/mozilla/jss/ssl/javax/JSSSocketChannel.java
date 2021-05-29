@@ -111,6 +111,7 @@ public class JSSSocketChannel extends SocketChannel {
         }
     }
 
+    @Override
     public boolean finishConnect() throws IOException {
         if (parent != null) {
             if (!parent.finishConnect()) {
@@ -230,10 +231,12 @@ public class JSSSocketChannel extends SocketChannel {
         return result;
     }
 
+    @Override
     public int read(ByteBuffer dst) throws IOException {
         return (int) read(new ByteBuffer[] { dst });
     }
 
+    @Override
     public synchronized long read(ByteBuffer[] dsts, int offset, int length) throws IOException {
         if (inboundClosed) {
             return -1;
@@ -298,10 +301,12 @@ public class JSSSocketChannel extends SocketChannel {
         return decrypted;
     }
 
+    @Override
     public int write(ByteBuffer src) throws IOException {
         return (int) write(new ByteBuffer[] { src });
     }
 
+    @Override
     public synchronized long write(ByteBuffer[] srcs, int offset, int length) throws IOException {
         if (outboundClosed) {
             return -1;
@@ -348,6 +353,7 @@ public class JSSSocketChannel extends SocketChannel {
         return sent;
     }
 
+    @Override
     public void implCloseSelectableChannel() throws IOException {
         // Issue a couple of read and write operations with empty buffers: this
         // should ensure all data gets flushed from the SSLEngine and any
@@ -388,26 +394,23 @@ public class JSSSocketChannel extends SocketChannel {
             engine.cleanup();
             engine = null;
 
-            if (parent == null) {
-                if (autoClose) {
+            if (autoClose) {
+                if (parent == null) {
                     parentSocket.shutdownInput();
                     parentSocket.shutdownOutput();
                     parentSocket.close();
+                } else {
+                    parent.shutdownInput();
+                    parent.shutdownOutput();
+                    parent.close();
                 }
-
-                return;
-            }
-
-            if (autoClose) {
-                parent.shutdownInput();
-                parent.shutdownOutput();
-                parent.close();
             }
         }
     }
 
     /* == generic stubs for SocketChannel */
 
+    @Override
     public JSSSocketChannel bind(SocketAddress local) throws IOException {
         if (parent == null) {
             parentSocket.bind(local);
@@ -418,6 +421,7 @@ public class JSSSocketChannel extends SocketChannel {
         return this;
     }
 
+    @Override
     public boolean connect(SocketAddress remote) throws IOException {
         if (parent == null) {
             parentSocket.connect(remote);
@@ -427,6 +431,7 @@ public class JSSSocketChannel extends SocketChannel {
         return parent.connect(remote);
     }
 
+    @Override
     public <T> T getOption(SocketOption<T> name) throws IOException {
         if (parent == null) {
             return null;
@@ -435,6 +440,7 @@ public class JSSSocketChannel extends SocketChannel {
         return parent.getOption(name);
     }
 
+    @Override
     public Set<SocketOption<?>> supportedOptions() {
         if (parent == null) {
             return null;
@@ -443,6 +449,7 @@ public class JSSSocketChannel extends SocketChannel {
         return parent.supportedOptions();
     }
 
+    @Override
     public <T> JSSSocketChannel setOption(SocketOption<T> name, T value) throws IOException {
         if (parent != null) {
             parent.setOption(name, value);
@@ -451,10 +458,12 @@ public class JSSSocketChannel extends SocketChannel {
         return this;
     }
 
+    @Override
     public JSSSocket socket() {
         return sslSocket;
     }
 
+    @Override
     public boolean isConnected() {
         if (parent == null) {
             return parentSocket.isConnected();
@@ -463,6 +472,7 @@ public class JSSSocketChannel extends SocketChannel {
         return parent.isConnected();
     }
 
+    @Override
     public boolean isConnectionPending() {
         if (parent == null) {
             return !parentSocket.isConnected();
@@ -471,6 +481,7 @@ public class JSSSocketChannel extends SocketChannel {
         return parent.isConnectionPending();
     }
 
+    @Override
     public SocketAddress getLocalAddress() throws IOException {
         if (parent == null) {
             return parentSocket.getLocalSocketAddress();
@@ -479,6 +490,7 @@ public class JSSSocketChannel extends SocketChannel {
         return parent.getLocalAddress();
     }
 
+    @Override
     public SocketAddress getRemoteAddress() throws IOException {
         if (parent == null) {
             return parentSocket.getRemoteSocketAddress();
@@ -487,6 +499,7 @@ public class JSSSocketChannel extends SocketChannel {
         return parent.getRemoteAddress();
     }
 
+    @Override
     public JSSSocketChannel shutdownInput() throws IOException {
         // Hold parent socket/channel open until we've sent CLOSE_NOTIFY
         // messages.
@@ -494,6 +507,7 @@ public class JSSSocketChannel extends SocketChannel {
         return this;
     }
 
+    @Override
     public JSSSocketChannel shutdownOutput() throws IOException {
         engine.closeOutbound();
         write(empty);
@@ -504,6 +518,7 @@ public class JSSSocketChannel extends SocketChannel {
         return this;
     }
 
+    @Override
     public void implConfigureBlocking(boolean block) throws IOException {
         if (parent == null) {
             return;

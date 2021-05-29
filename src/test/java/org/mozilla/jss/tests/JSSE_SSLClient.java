@@ -13,12 +13,12 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.lang.reflect.InvocationTargetException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchProviderException;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.lang.reflect.InvocationTargetException;
 
 import javax.net.ssl.HandshakeCompletedEvent;
 import javax.net.ssl.HandshakeCompletedListener;
@@ -316,13 +316,16 @@ public class JSSE_SSLClient {
             // trust manager that trusts all certificates
             TrustManager[] trustAllCerts = new TrustManager[]{
                 new X509TrustManager() {
+                    @Override
                     public java.security.cert.X509Certificate[]
                             getAcceptedIssuers() {
                         return null;
                     }
+                    @Override
                     public void checkClientTrusted(
                             java.security.cert.X509Certificate[] chain,
                             String authType) {}
+                    @Override
                     public void checkServerTrusted(
                             java.security.cert.X509Certificate[] chain,
                             String authType) {}
@@ -393,6 +396,7 @@ public class JSSE_SSLClient {
         try {
             socket.addHandshakeCompletedListener(
                     new HandshakeCompletedListener() {
+                @Override
                 public void handshakeCompleted(
                         HandshakeCompletedEvent event) {
                     h_ciphers.add(event.getCipherSuite());
@@ -529,7 +533,7 @@ public class JSSE_SSLClient {
                 keystoreLocation = args[0];
             }
             if ( args.length >= 2) {
-                testPort         = new Integer(args[1]).intValue();
+                testPort         = Integer.parseInt(args[1]);
                 System.out.println("using port: " + testPort);
             }
             if ( args.length >= 3) {

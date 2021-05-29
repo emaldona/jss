@@ -31,7 +31,7 @@ public abstract class NativeEnclosure implements AutoCloseable {
     /**
      * Size of enclosed mPointer.
      */
-    public long        mPointerSize;
+    public long mPointerSize;
 
     /**
      * Allocate and initialize mPointer with its enclosed value.
@@ -45,6 +45,7 @@ public abstract class NativeEnclosure implements AutoCloseable {
         }
     }
 
+    @Override
     @Deprecated
     protected void finalize() throws Throwable {
         close();
@@ -55,6 +56,7 @@ public abstract class NativeEnclosure implements AutoCloseable {
      *
      * Must be called to prevent memory leaks.
      */
+    @Override
     public final void close() throws Exception {
         if (mPointer != null) {
             releaseNativeResources();

@@ -179,6 +179,7 @@ public class JSSServerSocket extends SSLServerSocket {
      *
      * @see java.net.ServerSocket#getChannel()
      */
+    @Override
     public JSSServerSocketChannel getChannel() {
         if (parent.getChannel() == null) {
             return null;
@@ -511,12 +512,12 @@ public class JSSServerSocket extends SSLServerSocket {
     }
 
     @Override
-    public int getSoTimeout() throws IOException {
+    public synchronized int getSoTimeout() throws IOException {
         return parent.getSoTimeout();
     }
 
     @Override
-    public void setSoTimeout(int timeout) throws SocketException {
+    public synchronized void setSoTimeout(int timeout) throws SocketException {
         parent.setSoTimeout(timeout);
     }
 
@@ -531,12 +532,12 @@ public class JSSServerSocket extends SSLServerSocket {
     }
 
     @Override
-    public int getReceiveBufferSize() throws SocketException {
+    public synchronized int getReceiveBufferSize() throws SocketException {
         return parent.getReceiveBufferSize();
     }
 
     @Override
-    public void setReceiveBufferSize(int size) throws SocketException {
+    public synchronized void setReceiveBufferSize(int size) throws SocketException {
         parent.setReceiveBufferSize(size);
     }
 
@@ -567,15 +568,18 @@ public class JSSServerSocket extends SSLServerSocket {
 
     /* == stubs for Java 9 Socket == */
 
+    @Override
     public <T> ServerSocket setOption(SocketOption<T> name, T value) throws IOException {
         getInternalChannel().setOption(name, value);
         return this;
     }
 
+    @Override
     public <T> T getOption(SocketOption<T> name) throws IOException {
         return getInternalChannel().getOption(name);
     }
 
+    @Override
     public Set<SocketOption<?>> supportedOptions() {
         return getInternalChannel().supportedOptions();
     }
