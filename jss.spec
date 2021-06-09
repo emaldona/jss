@@ -9,8 +9,8 @@ License:        MPLv1.1 or GPLv2+ or LGPLv2+
 # For development (i.e. unsupported) releases, use x.y.z-0.n.<phase>.
 # For official (i.e. supported) releases, use x.y.z-r where r >=1.
 Version:        4.9.0
-Release:        0.1.alpha1%{?_timestamp}%{?_commit_id}%{?dist}
-%global         _phase -alpha1
+Release:        0.2.alpha2%{?_timestamp}%{?_commit_id}%{?dist}
+%global         _phase -alpha2
 
 # To generate the source tarball:
 # $ git clone https://github.com/dogtagpki/jss.git
@@ -27,6 +27,14 @@ Source:         https://github.com/dogtagpki/%{name}/archive/v%{version}%{?_phas
 #     <version tag> \
 #     > jss-VERSION-RELEASE.patch
 # Patch: jss-VERSION-RELEASE.patch
+
+################################################################################
+# Java
+################################################################################
+
+%define java_devel java-11-openjdk-devel
+%define java_headless java-11-openjdk-headless
+%define java_home /usr/lib/jvm/jre-11-openjdk
 
 ################################################################################
 # Build Options
@@ -50,7 +58,7 @@ BuildRequires:  gcc-c++
 BuildRequires:  nspr-devel >= 4.13.1
 BuildRequires:  nss-devel >= 3.44
 BuildRequires:  nss-tools >= 3.44
-BuildRequires:  java-devel
+BuildRequires:  %{java_devel}
 BuildRequires:  jpackage-utils
 BuildRequires:  slf4j
 BuildRequires:  glassfish-jaxb-api
@@ -64,7 +72,7 @@ BuildRequires:  apache-commons-lang3
 BuildRequires:  junit
 
 Requires:       nss >= 3.44
-Requires:       java-headless
+Requires:       %{java_headless}
 Requires:       jpackage-utils
 Requires:       slf4j
 Requires:       glassfish-jaxb-api
@@ -105,8 +113,6 @@ This package contains the API documentation for JSS.
 
 %set_build_flags
 
-[ -z "$JAVA_HOME" ] && export JAVA_HOME=%{_jvmdir}/java
-
 # Enable compiler optimizations
 export BUILD_OPT=1
 
@@ -119,13 +125,25 @@ modutil -dbdir /etc/pki/nssdb -chkfips true | grep -q enabled && export FIPS_ENA
 
 # The Makefile is not thread-safe
 %cmake \
+    -DVERSION=%{version} \
     -DJAVA_HOME=%{java_home} \
     -DJAVA_LIB_INSTALL_DIR=%{_jnidir} \
+    -DJSS_LIB_INSTALL_DIR=%{_libdir}/jss \
     -B %{_vpath_builddir}
 
 cd %{_vpath_builddir}
-%{__make} all
-%{__make} javadoc
+
+%{__make} \
+    VERBOSE=%{?_verbose} \
+    CMAKE_NO_VERBOSE=1 \
+    --no-print-directory \
+    all
+
+%{__make} \
+    VERBOSE=%{?_verbose} \
+    CMAKE_NO_VERBOSE=1 \
+    --no-print-directory \
+    javadoc
 
 %if %{with_test}
 ctest --output-on-failure
@@ -134,27 +152,16 @@ ctest --output-on-failure
 ################################################################################
 %install
 
-# There is no install target so we'll do it by hand
+cd %{_vpath_builddir}
 
-# jars
-install -d -m 0755 $RPM_BUILD_ROOT%{_jnidir}
-install -m 644 %{_vpath_builddir}/jss4.jar ${RPM_BUILD_ROOT}%{_jnidir}/jss4.jar
+%{__make} \
+    VERBOSE=%{?_verbose} \
+    CMAKE_NO_VERBOSE=1 \
+    DESTDIR=%{buildroot} \
+    INSTALL="install -p" \
+    --no-print-directory \
+    install
 
-# We have to use the name libjss4.so because this is dynamically
-# loaded by the jar file.
-install -d -m 0755 $RPM_BUILD_ROOT%{_libdir}/jss
-install -m 0755 %{_vpath_builddir}/libjss4.so ${RPM_BUILD_ROOT}%{_libdir}/jss/
-pushd  ${RPM_BUILD_ROOT}%{_libdir}/jss
-    ln -fs %{_jnidir}/jss4.jar jss4.jar
-popd
-
-# javadoc
-install -d -m 0755 $RPM_BUILD_ROOT%{_javadocdir}/%{name}-%{version}
-cp -rp %{_vpath_builddir}/docs/* $RPM_BUILD_ROOT%{_javadocdir}/%{name}-%{version}
-cp -p jss.html $RPM_BUILD_ROOT%{_javadocdir}/%{name}-%{version}
-cp -p *.txt $RPM_BUILD_ROOT%{_javadocdir}/%{name}-%{version}
-
-# No ldconfig is required since this library is loaded by Java itself.
 ################################################################################
 %files
 
@@ -172,6 +179,6 @@ cp -p *.txt $RPM_BUILD_ROOT%{_javadocdir}/%{name}-%{version}
 
 ################################################################################
 %changelog
-* Tue May 29 2018 Dogtag PKI Team <pki-devel@redhat.com> 4.5.0-0
+* Tue May 29 2018 Dogtag PKI Team <devel@lists.dogtagpki.org> 4.5.0-0
 - To list changes in <branch> since <tag>:
   $ git log --pretty=oneline --abbrev-commit --no-decorate <tag>..<branch>
