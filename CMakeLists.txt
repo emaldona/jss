@@ -81,14 +81,14 @@ jss_tests()
 
 install(
     FILES
-        ${CMAKE_CURRENT_BINARY_DIR}/jss4.jar
+        ${CMAKE_CURRENT_BINARY_DIR}/jss.jar
     DESTINATION
         ${JAVA_LIB_INSTALL_DIR}
 )
 
 install(
     FILES
-        ${CMAKE_CURRENT_BINARY_DIR}/libjss4.so
+        ${CMAKE_CURRENT_BINARY_DIR}/libjss.so
     DESTINATION
         ${JSS_LIB_INSTALL_DIR}
     PERMISSIONS
@@ -99,7 +99,7 @@ install(
 
 install(
     CODE "execute_process(
-        COMMAND ln -sf ${JAVA_LIB_INSTALL_DIR}/jss4.jar \$ENV{DESTDIR}${JSS_LIB_INSTALL_DIR}/jss4.jar
+        COMMAND ln -sf ${JAVA_LIB_INSTALL_DIR}/jss.jar \$ENV{DESTDIR}${JSS_LIB_INSTALL_DIR}/jss.jar
     )"
 )
 
