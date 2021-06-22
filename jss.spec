@@ -62,11 +62,7 @@ BuildRequires:  %{java_devel}
 BuildRequires:  jpackage-utils
 BuildRequires:  slf4j
 BuildRequires:  glassfish-jaxb-api
-%if 0%{?rhel} && 0%{?rhel} <= 7
-# no slf4j-jdk14
-%else
 BuildRequires:  slf4j-jdk14
-%endif
 BuildRequires:  apache-commons-lang3
 
 BuildRequires:  junit
@@ -76,11 +72,7 @@ Requires:       %{java_headless}
 Requires:       jpackage-utils
 Requires:       slf4j
 Requires:       glassfish-jaxb-api
-%if 0%{?rhel} && 0%{?rhel} <= 7
-# no slf4j-jdk14
-%else
 Requires:       slf4j-jdk14
-%endif
 Requires:       apache-commons-lang3
 
 Conflicts:      ldapjdk < 4.20
@@ -113,6 +105,8 @@ This package contains the API documentation for JSS.
 
 %set_build_flags
 
+export JAVA_HOME=%{java_home}
+
 # Enable compiler optimizations
 export BUILD_OPT=1
 
@@ -123,43 +117,22 @@ export CFLAGS
 # Check if we're in FIPS mode
 modutil -dbdir /etc/pki/nssdb -chkfips true | grep -q enabled && export FIPS_ENABLED=1
 
-# The Makefile is not thread-safe
-%cmake \
-    -DVERSION=%{version} \
-    -DJAVA_HOME=%{java_home} \
-    -DJAVA_LIB_INSTALL_DIR=%{_jnidir} \
-    -DJSS_LIB_INSTALL_DIR=%{_libdir}/jss \
-    -B %{_vpath_builddir}
-
-cd %{_vpath_builddir}
-
-%{__make} \
-    VERBOSE=%{?_verbose} \
-    CMAKE_NO_VERBOSE=1 \
-    --no-print-directory \
-    all
-
-%{__make} \
-    VERBOSE=%{?_verbose} \
-    CMAKE_NO_VERBOSE=1 \
-    --no-print-directory \
-    javadoc
-
-%if %{with test}
-ctest --output-on-failure
-%endif
+./build.sh \
+    %{?_verbose:-v} \
+    --work-dir=%{_vpath_builddir} \
+    --java-lib-dir=%{_jnidir} \
+    --jss-lib-dir=%{_libdir}/jss \
+    --version=%{version} \
+    %{!?with_test:--without-test} \
+    dist
 
 ################################################################################
 %install
 
-cd %{_vpath_builddir}
-
-%{__make} \
-    VERBOSE=%{?_verbose} \
-    CMAKE_NO_VERBOSE=1 \
-    DESTDIR=%{buildroot} \
-    INSTALL="install -p" \
-    --no-print-directory \
+./build.sh \
+    %{?_verbose:-v} \
+    --work-dir=%{_vpath_builddir} \
+    --install-dir=%{buildroot} \
     install
 
 ################################################################################
