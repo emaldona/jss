@@ -56,6 +56,43 @@ jobs:
           name: jss-runner-${{ matrix.os }}
           path: /tmp/jss-runner.tar
 
+  pki-build-test:
+    name: Building PKI
+    needs: [init, build]
+    runs-on: ubuntu-latest
+    env:
+      SHARED: /tmp/workdir/jss
+      COPR_REPO: "@pki/master"
+    strategy:
+      matrix: ${{ fromJSON(needs.init.outputs.matrix) }}
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v2
+
+      - name: Download runner image
+        uses: actions/download-artifact@v2
+        with:
+          name: jss-runner-${{ matrix.os }}
+          path: /tmp
+
+      - name: Load runner image
+        run: docker load --input /tmp/jss-runner.tar
+
+      - name: Run container
+        run: |
+          IMAGE=jss-runner \
+          NAME=pki \
+          HOSTNAME=pki.example.com \
+          tests/bin/runner-init.sh
+
+      - name: Build PKI
+        run: |
+          docker exec pki dnf install -y git rpm-build
+          docker exec pki git clone https://github.com/dogtagpki/pki
+          docker exec pki dnf build-dep -y --spec pki/pki.spec
+          docker exec pki pki/build.sh --with-timestamp --with-commit-id rpm
+          docker exec pki bash -c "dnf install -y /root/build/pki/RPMS/*.rpm"
+
   ca-test:
     name: Installing CA
     needs: [init, build]
@@ -86,25 +123,55 @@ jobs:
           tests/bin/runner-init.sh
 
       - name: Install DS and PKI packages
-        run: docker exec pki dnf install -y 389-ds-base pki-ca
+        run: docker exec pki dnf install -y 389-ds-base pki-ca pki-tests
 
       - name: Install DS
         run: docker exec pki ${SHARED}/tests/bin/ds-create.sh
 
       - name: Install CA
-        run: docker exec pki pkispawn -f /usr/share/pki/server/examples/installation/ca.cfg -s CA -v
+        run: |
+          docker exec pki pkispawn -f /usr/share/pki/server/examples/installation/ca.cfg -s CA -v
+          # set buffer size to 0 so that revocation takes effect immediately
+          docker exec pki pki-server ca-config-set auths.revocationChecking.bufferSize 0
+          # enable signed audit log
+          docker exec pki pki-server ca-config-set log.instance.SignedAudit.logSigning true
+          # restart PKI server
+          docker exec pki pki-server restart --wait
 
       - name: Run PKI healthcheck
         run: docker exec pki pki-healthcheck --debug
 
-      - name: Verify CA admin
+      - name: Initialize PKI client
         run: |
           docker exec pki pki-server cert-export ca_signing --cert-file ca_signing.crt
           docker exec pki pki client-cert-import ca_signing --ca-cert ca_signing.crt
+          docker exec pki pki info
+
+      - name: Test CA certs
+        run: |
+          docker exec pki /usr/share/pki/tests/ca/bin/test-ca-signing-cert.sh
+          docker exec pki /usr/share/pki/tests/ca/bin/test-subsystem-cert.sh
+          docker exec pki /usr/share/pki/tests/ca/bin/test-ca-certs.sh
+
+      - name: Test CA admin
+        run: |
           docker exec pki pki client-cert-import \
               --pkcs12 /root/.dogtag/pki-tomcat/ca_admin_cert.p12 \
               --pkcs12-password-file /root/.dogtag/pki-tomcat/ca/pkcs12_password.conf
           docker exec pki pki -n caadmin ca-user-show caadmin
+
+      - name: Test CA agent
+        run: |
+          docker exec pki /usr/share/pki/tests/ca/bin/ca-agent-create.sh
+          docker exec pki /usr/share/pki/tests/ca/bin/ca-agent-cert-create.sh
+          docker exec pki /usr/share/pki/tests/ca/bin/ca-agent-cert-revoke.sh
+          docker exec pki /usr/share/pki/tests/ca/bin/ca-agent-cert-unrevoke.sh
+
+      - name: Test CA auditor
+        run: |
+          docker exec pki /usr/share/pki/tests/ca/bin/test-ca-auditor-create.sh
+          docker exec pki /usr/share/pki/tests/ca/bin/test-ca-auditor-cert.sh
+          docker exec pki /usr/share/pki/tests/ca/bin/test-ca-auditor-logs.sh
 
       - name: Gather artifacts
         if: always()
